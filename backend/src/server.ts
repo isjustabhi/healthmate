@@ -28,6 +28,16 @@ app.use((req, _res, next) => {
   next();
 });
 
+app.get('/', (_req, res) => {
+  res.json({
+    service: 'HealthMate API',
+    status: 'running',
+    frontend: FRONTEND_URL,
+    healthCheck: '/api/health-check',
+    docs: 'Use the Next.js app at http://localhost:3000 — this port is API-only.',
+  });
+});
+
 app.get('/api/health-check', (_req, res) => {
   res.json({ status: 'ok', service: 'HealthMate API' });
 });
@@ -58,9 +68,19 @@ async function start() {
     console.warn('Warning: Database connection failed. Some features may not work.');
   }
 
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`HealthMate API running on http://localhost:${PORT}`);
     console.log(`CORS enabled for: ${FRONTEND_URL}`);
+  });
+
+  server.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(
+        `Port ${PORT} is already in use. Stop the other process (e.g. lsof -ti :${PORT} | xargs kill -9) or change PORT in .env.`
+      );
+      process.exit(1);
+    }
+    throw err;
   });
 }
 

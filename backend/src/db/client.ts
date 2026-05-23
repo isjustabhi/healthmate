@@ -8,9 +8,10 @@ export function getPool(): Pool {
     if (!connectionString) {
       throw new Error('DATABASE_URL environment variable is not set');
     }
+    const isSupabase = connectionString.includes('supabase.co');
     pool = new Pool({
       connectionString,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      ssl: isSupabase ? { rejectUnauthorized: false } : process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     });
     pool.on('error', (err) => {
       console.error('Unexpected database pool error:', err);
@@ -33,7 +34,13 @@ export async function testConnection(): Promise<boolean> {
     await query('SELECT 1');
     return true;
   } catch (error) {
-    console.error('Database connection failed:', error);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('Database connection failed:', msg);
+    if (msg.includes('ENOTFOUND') && process.env.DATABASE_URL?.includes('db.')) {
+      console.error(
+        'Tip: db.<project>.supabase.co is often IPv6-only. In Supabase Dashboard → Connect, copy the Session pooler URI (aws-0-<region>.pooler.supabase.com) and set DATABASE_URL. URL-encode @ in passwords as %40.'
+      );
+    }
     return false;
   }
 }

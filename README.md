@@ -61,7 +61,10 @@ cd healthmate
 
 1. Create a new project at [supabase.com](https://supabase.com)
 2. Go to **SQL Editor** and run the contents of `backend/src/db/schema.sql`
-3. Copy your **Database URL** from Settings → Database → Connection string (URI)
+3. Copy your **Database URL** from **Project Settings → Database → Connect → URI**
+   - Use **Session pooler** (port `5432`) or **Transaction pooler** (port `6543`)
+   - Host often looks like `aws-0-<region>.pooler.supabase.com`, not `db.<ref>.supabase.co`
+   - If your password contains `@` or `#`, URL-encode it (`@` → `%40`, `#` → `%23`)
 
 ### 3. Backend setup
 
@@ -98,6 +101,8 @@ npm run dev
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_APP_NAME=HealthMate
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
 ```
 
 ### 5. Open the app
@@ -162,6 +167,8 @@ curl -X POST http://localhost:3001/api/health/metrics \
 ```
 
 ## Deployment Guide
+
+See **[DEPLOY.md](./DEPLOY.md)** for a full step-by-step checklist (Railway + Vercel).
 
 ### Frontend (Vercel)
 
