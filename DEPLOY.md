@@ -43,7 +43,8 @@ Deploy **backend first**, then **frontend** (frontend needs the backend URL).
 
 | Variable | Value |
 |----------|--------|
-| `NEXT_PUBLIC_API_URL` | Your Railway URL (no trailing slash), e.g. `https://healthmate-production.up.railway.app` |
+| `BACKEND_URL` | **Required** — Railway URL, e.g. `https://healthmate-production.up.railway.app` (no trailing slash). Proxies `/api/*` from Vercel to Railway. |
+| `NEXT_PUBLIC_API_URL` | Optional — same Railway URL if you prefer direct client calls instead of the proxy |
 | `NEXT_PUBLIC_APP_NAME` | `HealthMate` |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://nvkianzrscbupzqmabid.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | From Supabase dashboard |

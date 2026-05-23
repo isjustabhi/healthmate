@@ -11,7 +11,19 @@ import {
   User,
 } from './types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// Browser: use same-origin /api/* (proxied by next.config rewrites to Railway).
+// Override with NEXT_PUBLIC_API_URL if you want direct API calls.
+function resolveApiUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
+  }
+  if (typeof window !== 'undefined') {
+    return '';
+  }
+  return process.env.BACKEND_URL?.replace(/\/$/, '') || 'http://localhost:3001';
+}
+
+const API_URL = resolveApiUrl();
 
 const api = axios.create({
   baseURL: API_URL,
@@ -29,9 +41,11 @@ api.interceptors.request.use((config) => {
 function handleError(error: unknown): never {
   if (error instanceof AxiosError) {
     if (error.code === 'ERR_NETWORK' || !error.response) {
-      throw new Error(
-        `Cannot reach API at ${API_URL}. Check NEXT_PUBLIC_API_URL on Vercel (must be https, no trailing slash) and that Railway is running.`
-      );
+      const hint =
+        API_URL === ''
+          ? 'Set BACKEND_URL on Vercel to your Railway URL (https://....up.railway.app) and redeploy, or set NEXT_PUBLIC_API_URL.'
+          : `Check API URL (${API_URL}) and that Railway is running.`;
+      throw new Error(`Cannot reach the API. ${hint}`);
     }
     const message = error.response?.data?.error || error.message || 'Request failed';
     throw new Error(message);
