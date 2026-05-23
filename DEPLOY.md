@@ -43,8 +43,8 @@ Deploy **backend first**, then **frontend** (frontend needs the backend URL).
 
 | Variable | Value |
 |----------|--------|
-| `BACKEND_URL` | **Required** — full Railway URL with `https://`, e.g. `https://healthmate-production.up.railway.app` (no trailing slash). Must start with `https://` or build will fail. |
-| `NEXT_PUBLIC_API_URL` | Optional — same Railway URL if you prefer direct client calls instead of the proxy |
+| `BACKEND_URL` | **Required** — full Railway URL with `https://`, e.g. `https://healthmate-production.up.railway.app` (no trailing slash). Used by the server-side API proxy. |
+| `NEXT_PUBLIC_API_URL` | Optional — not required if using the built-in `/api` proxy |
 | `NEXT_PUBLIC_APP_NAME` | `HealthMate` |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://nvkianzrscbupzqmabid.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | From Supabase dashboard |

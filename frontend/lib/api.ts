@@ -11,16 +11,16 @@ import {
   User,
 } from './types';
 
-// Browser: use same-origin /api/* (proxied by next.config rewrites to Railway).
-// Override with NEXT_PUBLIC_API_URL if you want direct API calls.
+// Browser always calls same-origin /api/* → proxied by app/api/[...path]/route.ts
 function resolveApiUrl(): string {
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
-  }
   if (typeof window !== 'undefined') {
     return '';
   }
-  return process.env.BACKEND_URL?.replace(/\/$/, '') || 'http://localhost:3001';
+  return (
+    process.env.BACKEND_URL?.replace(/\/$/, '') ||
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ||
+    'http://localhost:3001'
+  );
 }
 
 const API_URL = resolveApiUrl();
@@ -41,11 +41,14 @@ api.interceptors.request.use((config) => {
 function handleError(error: unknown): never {
   if (error instanceof AxiosError) {
     if (error.code === 'ERR_NETWORK' || !error.response) {
-      const hint =
-        API_URL === ''
-          ? 'Set BACKEND_URL on Vercel to your Railway URL (https://....up.railway.app) and redeploy, or set NEXT_PUBLIC_API_URL.'
-          : `Check API URL (${API_URL}) and that Railway is running.`;
-      throw new Error(`Cannot reach the API. ${hint}`);
+      throw new Error(
+        'Cannot reach the API. Set BACKEND_URL on Vercel to your Railway https URL and redeploy.'
+      );
+    }
+    if (error.response?.status === 404) {
+      throw new Error(
+        `API route not found (404). Check Railway is running and BACKEND_URL is correct. Request: ${error.config?.url || 'unknown'}`
+      );
     }
     const message = error.response?.data?.error || error.message || 'Request failed';
     throw new Error(message);
