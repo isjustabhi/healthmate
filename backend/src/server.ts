@@ -10,11 +10,45 @@ dotenv.config();
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+
+function getAllowedOrigins(): Set<string> {
+  const origins = new Set<string>([
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    FRONTEND_URL,
+  ]);
+
+  const extras = process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim().replace(/\/$/, ''));
+  extras?.forEach((o) => o && origins.add(o));
+
+  return origins;
+}
+
+const allowedOrigins = getAllowedOrigins();
+
+function isOriginAllowed(origin: string | undefined): boolean {
+  if (!origin) return true;
+  const normalized = origin.replace(/\/$/, '');
+  if (allowedOrigins.has(normalized)) return true;
+  // Vercel production + preview deployments
+  if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(normalized)) return true;
+  if (process.env.CORS_ALLOW_VERCEL === 'true' && normalized.endsWith('.vercel.app')) {
+    return true;
+  }
+  return false;
+}
 
 app.use(
   cors({
-    origin: [FRONTEND_URL, 'http://localhost:3000'],
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        console.warn('CORS blocked origin:', origin, 'Allowed:', [...allowedOrigins]);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -68,9 +102,10 @@ async function start() {
     console.warn('Warning: Database connection failed. Some features may not work.');
   }
 
-  const server = app.listen(PORT, () => {
-    console.log(`HealthMate API running on http://localhost:${PORT}`);
-    console.log(`CORS enabled for: ${FRONTEND_URL}`);
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`HealthMate API running on port ${PORT}`);
+    console.log(`CORS frontend: ${FRONTEND_URL}`);
+    console.log(`Allowed origins:`, [...allowedOrigins]);
   });
 
   server.on('error', (err: NodeJS.ErrnoException) => {

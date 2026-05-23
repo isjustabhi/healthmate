@@ -28,6 +28,11 @@ api.interceptors.request.use((config) => {
 
 function handleError(error: unknown): never {
   if (error instanceof AxiosError) {
+    if (error.code === 'ERR_NETWORK' || !error.response) {
+      throw new Error(
+        `Cannot reach API at ${API_URL}. Check NEXT_PUBLIC_API_URL on Vercel (must be https, no trailing slash) and that Railway is running.`
+      );
+    }
     const message = error.response?.data?.error || error.message || 'Request failed';
     throw new Error(message);
   }

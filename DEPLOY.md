@@ -75,7 +75,8 @@ Deploy **backend first**, then **frontend** (frontend needs the backend URL).
 
 | Issue | Fix |
 |-------|-----|
-| CORS errors | `FRONTEND_URL` on Railway must match Vercel URL exactly |
+| CORS / network error | `FRONTEND_URL` = exact Vercel URL (no `/` at end). Redeploy Railway after change. All `*.vercel.app` URLs are allowed automatically. |
+| Still "Cannot reach API" | Vercel: `NEXT_PUBLIC_API_URL` must be `https://...railway.app` (not localhost). **Redeploy** Vercel after changing env vars. |
 | DB connection fails | Use **pooler** `DATABASE_URL`, not `db.*` direct host; URL-encode password |
 | 404 on Railway root | Normal for `/`; use `/api/health-check` |
 | Auth works locally, not prod | Redeploy both; check `NEXT_PUBLIC_API_URL` at Vercel build time |
